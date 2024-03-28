@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, sized_box_for_whitespace
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
+import 'package:tarefalogin/view/login_view.dart';
 
 void main() {
   runApp(
@@ -17,10 +18,7 @@ class AppLogin extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'App de Login',
-      initialRoute: 'login',
-      routes: {
-        
-      },
+      home:LoginView() ,
     );
   }
 }

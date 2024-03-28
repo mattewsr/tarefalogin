@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'cadastro_view.dart';
 import 'recuperar_senha_view.dart';
+import 'cadastro_view.dart'; 
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -19,7 +20,7 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login'),
+        title: const Text('Login'),
         centerTitle: true,
       ),
       body: Padding(
@@ -96,7 +97,7 @@ class _LoginViewState extends State<LoginView> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PaginaRecuperarSenha(),
+                    builder: (context) => RecuperarSenhaView(),
                   ),
                 );
               },
