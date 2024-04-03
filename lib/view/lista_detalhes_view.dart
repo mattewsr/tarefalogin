@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'item_lista.dart';
+import 'repositorio_view.dart';
 
 class ListaDetalhesView extends StatefulWidget {
   final String nomeLista;
@@ -12,6 +13,20 @@ class ListaDetalhesView extends StatefulWidget {
 
 class _ListaDetalhesViewState extends State<ListaDetalhesView> {
   List<ItemLista> itens = []; // Lista de itens da lista
+  final _listaRepository = ListaRepository(); // Instância do repositório
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarItens();
+  }
+
+  Future<void> _carregarItens() async {
+    final itensCarregados = await _listaRepository.carregarItens(widget.nomeLista);
+    setState(() {
+      itens = itensCarregados;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +46,7 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
               onChanged: (value) {
                 setState(() {
                   item.comprado = value!;
+                  _listaRepository.salvarItem(item, widget.nomeLista); // Salva o estado do item
                 });
               },
             ),
@@ -39,6 +55,7 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
               onPressed: () {
                 setState(() {
                   itens.removeAt(index);
+                  _listaRepository.removerItem(item, widget.nomeLista); // Remove o item do repositório
                 });
               },
             ),
@@ -54,7 +71,9 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
 
           if (novoItem != null && novoItem.isNotEmpty) {
             setState(() {
-              itens.add(ItemLista(nome: novoItem));
+              final newItem = ItemLista(nome: novoItem, comprado: false);
+              itens.add(newItem);
+              _listaRepository.adicionarItem(newItem, widget.nomeLista); // Adiciona o novo item ao repositório
             });
           }
         },

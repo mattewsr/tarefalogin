@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'lista_detalhes_view.dart'; // Importando a tela de detalhes da lista
+import 'lista_detalhes_view.dart'; 
+import 'repositorio_view.dart';// Importando a tela de detalhes da lista
 
 class ListasView extends StatefulWidget {
   @override
