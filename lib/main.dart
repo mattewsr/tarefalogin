@@ -22,5 +22,3 @@ class AppLogin extends StatelessWidget {
     );
   }
 }
-
-
