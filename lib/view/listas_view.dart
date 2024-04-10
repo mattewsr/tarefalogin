@@ -3,8 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'lista_detalhes_view.dart';
 import 'PerfilUsuarioView.dart';
 import 'sobre_view.dart';
-import 'item_lista.dart';
-import 'repositorio_view.dart';
 
 class ListasView extends StatefulWidget {
   @override
@@ -13,6 +11,9 @@ class ListasView extends StatefulWidget {
 
 class _ListasViewState extends State<ListasView> {
   List<String> listas = [];
+  Map<String, List<String>> itensPorLista = {}; // Mapa para armazenar itens por lista
+  List<String> resultadosPesquisa = [];
+  bool exibirResultadosPesquisa = false;
 
   @override
   void initState() {
@@ -24,12 +25,21 @@ class _ListasViewState extends State<ListasView> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       listas = prefs.getStringList('listas') ?? [];
+      // Carregar itens por lista
+      listas.forEach((lista) {
+        List<String> itens = prefs.getStringList(lista) ?? [];
+        itensPorLista[lista] = itens;
+      });
     });
   }
 
   Future<void> _salvarListas() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('listas', listas);
+    // Salvar itens por lista
+    itensPorLista.forEach((lista, itens) {
+      prefs.setStringList(lista, itens);
+    });
   }
 
   Future<void> _editarNomeLista(String nomeListaAntigo) async {
@@ -45,6 +55,32 @@ class _ListasViewState extends State<ListasView> {
         _salvarListas(); // Salvar a lista após editar o nome
       });
     }
+  }
+
+  Future<void> _pesquisarItem(String termoPesquisa) async {
+    List<String> resultados = [];
+
+    // Verifica se o termo de pesquisa é encontrado em alguma lista
+    for (String lista in listas) {
+      List<String> itens = itensPorLista[lista] ?? [];
+      for (String item in itens) {
+        if (item.toLowerCase().contains(termoPesquisa.toLowerCase())) {
+          resultados.add(lista);
+          break; // Parar de verificar outros itens na mesma lista
+        }
+      }
+    }
+
+    setState(() {
+      resultadosPesquisa = resultados.toSet().toList(); // Remover duplicatas e converter para lista
+      exibirResultadosPesquisa = true;
+    });
+  }
+
+  void _voltarParaListas() {
+    setState(() {
+      exibirResultadosPesquisa = false;
+    });
   }
 
   @override
@@ -66,6 +102,19 @@ class _ListasViewState extends State<ListasView> {
             },
           ),
           IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () async {
+              String? termoPesquisa = await showDialog(
+                context: context,
+                builder: (context) => _pesquisarItemDialog(),
+              );
+
+              if (termoPesquisa != null && termoPesquisa.isNotEmpty) {
+                _pesquisarItem(termoPesquisa);
+              }
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.info_outline),
             onPressed: () {
               Navigator.push(
@@ -76,65 +125,81 @@ class _ListasViewState extends State<ListasView> {
               );
             },
           ),
-          IconButton(
-            icon: Icon(Icons.edit),
+        ],
+      ),
+      body: exibirResultadosPesquisa ? _buildResultadosPesquisa() : _buildListasGrid(listas),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              _voltarParaListas();
+            },
+            child: Icon(Icons.arrow_back),
+          ),
+          FloatingActionButton(
             onPressed: () async {
-              String? listaSelecionada = await showDialog(
+              // Criar uma nova lista
+              String? nomeLista = await showDialog(
                 context: context,
-                builder: (context) => _selecionarListaDialog(),
+                builder: (context) => _criarListaDialog(),
               );
 
-              if (listaSelecionada != null && listaSelecionada.isNotEmpty) {
-                _editarNomeLista(listaSelecionada);
+              if (nomeLista != null && nomeLista.isNotEmpty) {
+                setState(() {
+                  listas.add(nomeLista);
+                  _salvarListas(); // Salvar a lista após adicioná-la
+                });
               }
             },
+            child: Icon(Icons.add),
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                // Criar uma nova lista
-                String? nomeLista = await showDialog(
-                  context: context,
-                  builder: (context) => _criarListaDialog(),
-                );
+    );
+  }
 
-                if (nomeLista != null && nomeLista.isNotEmpty) {
-                  setState(() {
-                    listas.add(nomeLista);
-                    _salvarListas(); // Salvar a lista após adicioná-la
-                  });
-                }
-              },
-              child: Text('Criar Lista'),
+  // Widget para exibir a lista de listas
+  Widget _buildListasGrid(List<String> listas) {
+    return GridView.count(
+      crossAxisCount: 2,
+      children: List.generate(listas.length, (index) {
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ListaDetalhesView(nomeLista: listas[index]),
+              ),
+            );
+          },
+          child: Card(
+            child: Center(
+              child: Text(listas[index]),
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                // Exibir e gerenciar listas existentes
-                String? listaSelecionada = await showDialog(
-                  context: context,
-                  builder: (context) => _gerenciarListasDialog(),
-                );
+          ),
+        );
+      }),
+    );
+  }
 
-                if (listaSelecionada != null && listaSelecionada.isNotEmpty) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ListaDetalhesView(nomeLista: listaSelecionada),
-                    ),
-                  );
-                }
-              },
-              child: Text('Gerenciar Listas'),
-            ),
-          ],
-        ),
-      ),
+  // Widget para exibir os resultados da pesquisa
+  Widget _buildResultadosPesquisa() {
+    return ListView.builder(
+      itemCount: resultadosPesquisa.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(resultadosPesquisa[index]),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ListaDetalhesView(nomeLista: resultadosPesquisa[index]),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -168,23 +233,27 @@ class _ListasViewState extends State<ListasView> {
     );
   }
 
-  // Diálogo para selecionar uma lista existente
-  Widget _gerenciarListasDialog() {
+  // Diálogo para pesquisar um item
+  Widget _pesquisarItemDialog() {
+    TextEditingController pesquisaController = TextEditingController();
+
     return AlertDialog(
-      title: Text('Gerenciar Listas'),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: listas.map((lista) {
-            return ListTile(
-              title: Text(lista),
-              onTap: () {
-                Navigator.pop(context, lista); // Retornar o nome da lista selecionada
-              },
-            );
-          }).toList(),
+      title: Text('Pesquisar Item'),
+      content: TextField(
+        controller: pesquisaController,
+        decoration: InputDecoration(
+          labelText: 'Termo de Pesquisa',
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            String termoPesquisa = pesquisaController.text;
+            Navigator.pop(context, termoPesquisa); // Retornar o termo de pesquisa
+          },
+          child: Text('Pesquisar'),
+        ),
+      ],
     );
   }
 

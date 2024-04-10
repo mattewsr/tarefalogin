@@ -14,6 +14,7 @@ class ListaDetalhesView extends StatefulWidget {
 class _ListaDetalhesViewState extends State<ListaDetalhesView> {
   List<ItemLista> itens = []; // Lista de itens da lista
   final _listaRepository = ListaRepository(); // Instância do repositório
+  late List<ItemLista> itensFiltrados; // Lista de itens filtrados para pesquisa
 
   @override
   void initState() {
@@ -25,6 +26,13 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
     final itensCarregados = await _listaRepository.carregarItens(widget.nomeLista);
     setState(() {
       itens = itensCarregados;
+      itensFiltrados = List.from(itens); // Inicializa a lista de itens filtrados com todos os itens
+    });
+  }
+
+  void _filtrarItens(String query) {
+    setState(() {
+      itensFiltrados = itens.where((item) => item.nome.toLowerCase().contains(query.toLowerCase())).toList();
     });
   }
 
@@ -37,12 +45,26 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
       appBar: AppBar(
         title: Text(widget.nomeLista),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () async {
+              final String? query = await showSearch<String?>(
+                context: context,
+                delegate: ItemSearchDelegate(),
+              );
+              if (query != null) {
+                _filtrarItens(query);
+              }
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
-        itemCount: itens.length + 1, // Adiciona uma linha para o total
+        itemCount: itensFiltrados.length + 1, // Adiciona uma linha para o total
         itemBuilder: (context, index) {
-          if (index < itens.length) {
-            final item = itens[index];
+          if (index < itensFiltrados.length) {
+            final item = itensFiltrados[index];
             return ListTile(
               title: Text(item.nome),
               subtitle: Text('Quantidade: ${item.quantidade}, Preço: ${item.preco}'),
@@ -59,7 +81,7 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
                 icon: Icon(Icons.delete),
                 onPressed: () {
                   setState(() {
-                    itens.removeAt(index);
+                    itens.removeWhere((element) => element.nome == item.nome);
                     _listaRepository.removerItem(item, widget.nomeLista); // Remove o item do repositório
                   });
                 },
@@ -72,8 +94,11 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
 
                 if (itemEditado != null) {
                   setState(() {
-                    itens[index] = itemEditado;
-                    _listaRepository.salvarItem(itemEditado, widget.nomeLista); // Atualiza o item no repositório
+                    int indexOriginal = itens.indexWhere((element) => element.nome == item.nome);
+                    if (indexOriginal != -1) {
+                      itens[indexOriginal] = itemEditado;
+                      _listaRepository.salvarItem(itemEditado, widget.nomeLista); // Atualiza o item no repositório
+                    }
                   });
                 }
               },
@@ -161,7 +186,7 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
     );
   }
 
-  // Diálogo para editar um item da lista
+  // Diálogo para editar um item existente na lista
   Widget _editarItemDialog(ItemLista item) {
     TextEditingController nomeItemController = TextEditingController(text: item.nome);
     TextEditingController quantidadeController = TextEditingController(text: item.quantidade.toString());
@@ -214,5 +239,44 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
         ),
       ],
     );
+  }
+}
+
+// Classe para implementar a pesquisa de itens
+class ItemSearchDelegate extends SearchDelegate<String?> {
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    // Ações para limpar o texto de pesquisa
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    // Ação para fechar a pesquisa
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    // Resultados da pesquisa (não usado neste caso)
+    return Container();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // Sugestões de pesquisa (não usado neste caso)
+    return Container();
   }
 }
