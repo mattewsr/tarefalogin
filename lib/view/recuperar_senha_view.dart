@@ -10,8 +10,43 @@ class RecuperarSenhaView extends StatelessWidget {
         title: Text('Recuperar Senha'),
         centerTitle: true,
       ),
-      body: Center(
-        child: Text('Tela de Recuperação de Senha'),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'E-mail ou telefone',
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                _mostrarMensagem(context);
+              },
+              child: Text('Enviar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _mostrarMensagem(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Link enviado'),
+        content: Text('Um link de recuperação foi enviado para o seu e-mail ou telefone. Por favor, siga as instruções para recuperar sua senha.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Fechar o AlertDialog
+            },
+            child: Text('OK'),
+          ),
+        ],
       ),
     );
   }

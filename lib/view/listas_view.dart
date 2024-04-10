@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'lista_detalhes_view.dart'; 
-import 'repositorio_view.dart';// Importando a tela de detalhes da lista
+import 'lista_detalhes_view.dart';
+import 'PerfilUsuarioView.dart';
+import 'sobre_view.dart';
+import 'item_lista.dart';
+import 'repositorio_view.dart';
 
 class ListasView extends StatefulWidget {
   @override
@@ -29,6 +32,21 @@ class _ListasViewState extends State<ListasView> {
     await prefs.setStringList('listas', listas);
   }
 
+  Future<void> _editarNomeLista(String nomeListaAntigo) async {
+    String? novoNomeLista = await showDialog(
+      context: context,
+      builder: (context) => _editarNomeListaDialog(nomeListaAntigo),
+    );
+
+    if (novoNomeLista != null && novoNomeLista.isNotEmpty) {
+      setState(() {
+        final index = listas.indexOf(nomeListaAntigo);
+        listas[index] = novoNomeLista;
+        _salvarListas(); // Salvar a lista após editar o nome
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,10 +55,38 @@ class _ListasViewState extends State<ListasView> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.account_circle),
             onPressed: () {
-              // Logout: Voltar para a tela de login
-              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PerfilUsuarioView(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.info_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SobreView(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () async {
+              String? listaSelecionada = await showDialog(
+                context: context,
+                builder: (context) => _selecionarListaDialog(),
+              );
+
+              if (listaSelecionada != null && listaSelecionada.isNotEmpty) {
+                _editarNomeLista(listaSelecionada);
+              }
             },
           ),
         ],
@@ -139,6 +185,56 @@ class _ListasViewState extends State<ListasView> {
           }).toList(),
         ),
       ),
+    );
+  }
+
+  // Diálogo para selecionar a lista a ser editada
+  Widget _selecionarListaDialog() {
+    return AlertDialog(
+      title: Text('Selecione a lista a ser editada'),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: listas.map((lista) {
+            return ListTile(
+              title: Text(lista),
+              onTap: () {
+                Navigator.pop(context, lista); // Retornar o nome da lista selecionada
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  // Diálogo para editar o nome da lista
+  Widget _editarNomeListaDialog(String nomeListaAntigo) {
+    TextEditingController novoNomeListaController = TextEditingController();
+
+    return AlertDialog(
+      title: Text('Editar Nome da Lista'),
+      content: TextField(
+        controller: novoNomeListaController,
+        decoration: InputDecoration(
+          labelText: 'Novo Nome da Lista',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context); // Fechar diálogo sem editar o nome
+          },
+          child: Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: () {
+            String novoNomeLista = novoNomeListaController.text;
+            Navigator.pop(context, novoNomeLista); // Retornar o novo nome da lista
+          },
+          child: Text('Salvar'),
+        ),
+      ],
     );
   }
 }
