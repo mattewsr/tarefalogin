@@ -21,21 +21,7 @@ class _LoginViewState extends State<LoginView> {
 
     // Verificar se os campos estão preenchidos
     if (email.isEmpty || senha.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Erro de Login'),
-          content: Text('Preencha todos os campos.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
+      _mostrarDialog('Erro de Login', 'Preencha todos os campos.');
       return;
     }
 
@@ -45,49 +31,13 @@ class _LoginViewState extends State<LoginView> {
     final cadastroSenha = prefs.getString('senha');
 
     if (cadastroEmail == null) {
-      // Se o cadastro não existir, exibir mensagem e navegar para a tela de cadastro
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Erro de Login'),
-          content: Text('Cadastro não encontrado. Por favor, crie uma conta.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Fechar diálogo de erro
-                Navigator.push( // Navegar para a tela de cadastro
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CadastroView(),
-                  ),
-                );
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
+      _mostrarDialog('Erro de Login', 'Cadastro não encontrado. Por favor, crie uma conta.');
       return;
     }
 
     // Verificar se a senha está correta
     if (senha != cadastroSenha) {
-      // Se a senha estiver incorreta, exibir mensagem de erro
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Erro de Login'),
-          content: Text('Senha incorreta. Por favor, tente novamente.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Fechar diálogo de erro
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
+      _mostrarDialog('Erro de Login', 'Senha incorreta. Por favor, tente novamente.');
       return;
     }
 
@@ -100,72 +50,105 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
+  void _mostrarDialog(String title, String content) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Cor de fundo branca
       appBar: AppBar(
         title: const Text('Login'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'lib/imagens/OIG4.jpg',
-              width: 300,
-              height: 300,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'lib/imagens/A2IMG.jpg',
+              fit: BoxFit.cover, // Cobrir toda a tela com a imagem
             ),
-            SizedBox(height: 20),
-            TextFormField(
-              controller: emailController,
-              decoration: InputDecoration(
-                labelText: 'E-mail',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 20),
-            TextFormField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Senha',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _realizarLogin,
-              child: Text('Login'),
-            ),
-            SizedBox(height: 10),
-            TextButton(
-              onPressed: () {
-                // Navegar para a tela de cadastro
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CadastroView(),
+          ),
+          Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextFormField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'E-mail',
+                    border: OutlineInputBorder(),
+                    fillColor: Colors.white, // Cor de fundo branca para os campos de texto
+                    filled: true,
                   ),
-                );
-              },
-              child: Text('Criar Conta'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Navegar para a tela de recuperação de senha
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RecuperarSenhaView(),
+                ),
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    border: OutlineInputBorder(),
+                    fillColor: Colors.white, // Cor de fundo branca para os campos de texto
+                    filled: true,
                   ),
-                );
-              },
-              child: Text('Recuperar Senha'),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _realizarLogin,
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.blue), // Cor de fundo do botão
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15), // Espaçamento interno
+                    child: Text('Login', style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+                SizedBox(height: 10),
+                TextButton(
+                  onPressed: () {
+                    // Navegar para a tela de cadastro
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CadastroView(),
+                      ),
+                    );
+                  },
+                  child: Text('Criar Conta', style: TextStyle(fontSize: 16)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Navegar para a tela de recuperação de senha
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RecuperarSenhaView(),
+                      ),
+                    );
+                  },
+                  child: Text('Recuperar Senha', style: TextStyle(fontSize: 16)),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -17,7 +17,7 @@ class RecuperarSenhaView extends StatelessWidget {
           children: [
             TextFormField(
               decoration: InputDecoration(
-                labelText: 'E-mail ou telefone',
+                labelText: ' E-mail ',
               ),
             ),
             SizedBox(height: 20),

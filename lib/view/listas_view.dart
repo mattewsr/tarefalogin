@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'lista_detalhes_view.dart';
 import 'PerfilUsuarioView.dart';
 import 'sobre_view.dart';
+import 'login_view.dart'; // Importe a tela de login
 
 class ListasView extends StatefulWidget {
   @override
@@ -78,9 +79,32 @@ class _ListasViewState extends State<ListasView> {
   }
 
   void _voltarParaListas() {
-    setState(() {
-      exibirResultadosPesquisa = false;
-    });
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Sair do aplicativo?'),
+        content: Text('Tem certeza de que deseja sair do aplicativo?'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Fecha a caixa de diálogo
+            },
+            child: Text('Não'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Fecha a caixa de diálogo
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (BuildContext context) => LoginView()), // Navega para a tela de login
+                (Route<dynamic> route) => false, // Remove todas as rotas da pilha
+              );
+            },
+            child: Text('Sim'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -127,7 +151,11 @@ class _ListasViewState extends State<ListasView> {
           ),
         ],
       ),
-      body: exibirResultadosPesquisa ? _buildResultadosPesquisa() : _buildListasGrid(listas),
+      body: exibirResultadosPesquisa
+          ? _buildResultadosPesquisa()
+          : SingleChildScrollView(
+              child: _buildListasGrid(listas),
+            ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -163,6 +191,8 @@ class _ListasViewState extends State<ListasView> {
   Widget _buildListasGrid(List<String> listas) {
     return GridView.count(
       crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
       children: List.generate(listas.length, (index) {
         return GestureDetector(
           onTap: () {
@@ -186,6 +216,7 @@ class _ListasViewState extends State<ListasView> {
   // Widget para exibir os resultados da pesquisa
   Widget _buildResultadosPesquisa() {
     return ListView.builder(
+      shrinkWrap: true,
       itemCount: resultadosPesquisa.length,
       itemBuilder: (context, index) {
         return ListTile(
