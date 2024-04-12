@@ -80,7 +80,7 @@ class _LoginViewState extends State<LoginView> {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'lib/imagens/A2IMG.jpg',
+              'lib/imagens/OIG4.jpeg',
               fit: BoxFit.cover, // Cobrir toda a tela com a imagem
             ),
           ),
