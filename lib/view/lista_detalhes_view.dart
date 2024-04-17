@@ -105,9 +105,19 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
             );
           } else {
             // Exibir total de itens e valor total
-            return ListTile(
-              title: Text('Total: $totalItens itens'),
-              subtitle: Text('Valor Total: R\$ $valorTotal'),
+            return Column(
+              children: [
+                ListTile(
+                  title: Text('Total: $totalItens itens'),
+                  subtitle: Text('Valor Total: R\$ $valorTotal'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _excluirLista();
+                  },
+                  child: Text('Excluir Lista'),
+                ),
+              ],
             );
           }
         },
@@ -238,6 +248,34 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
           child: Text('Salvar'),
         ),
       ],
+    );
+  }
+
+  // Método para excluir a lista inteira
+  void _excluirLista() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Excluir Lista'),
+        content: Text('Tem certeza que deseja excluir esta lista?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Fechar o diálogo
+            },
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Remover a lista do repositório e voltar para a tela anterior
+              _listaRepository.excluirLista(widget.nomeLista);
+              Navigator.pop(context);
+              Navigator.pop(context); // Voltar duas vezes para a tela anterior
+            },
+            child: Text('Excluir'),
+          ),
+        ],
+      ),
     );
   }
 }

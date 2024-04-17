@@ -39,4 +39,9 @@ class ListaRepository {
     final itemListJson = itemList.map((item) => json.encode(item.toJson())).toList();
     await prefs.setStringList(nomeLista, itemListJson);
   }
+
+  Future<void> excluirLista(String nomeLista) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove(nomeLista);
+  }
 }

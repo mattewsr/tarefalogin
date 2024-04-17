@@ -150,6 +150,7 @@ class _ListasViewState extends State<ListasView> {
             },
           ),
         ],
+        leading: _buildLeadingIcon(), // Adiciona o ícone de volta à tela principal de listas
       ),
       body: exibirResultadosPesquisa
           ? _buildResultadosPesquisa()
@@ -286,6 +287,21 @@ class _ListasViewState extends State<ListasView> {
         ),
       ],
     );
+  }
+
+  // Widget para construir o ícone de volta à tela principal de listas
+  Widget _buildLeadingIcon() {
+    // Verifica se a tela atual é a tela principal de listas
+    if (ModalRoute.of(context)!.settings.name == '/') {
+      return SizedBox(); // Retorna um widget vazio se estiver na tela principal
+    } else {
+      return IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context); // Retorna à tela principal de listas
+        },
+      );
+    }
   }
 
   // Diálogo para selecionar a lista a ser editada
