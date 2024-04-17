@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'cadastro_view.dart';
 import 'recuperar_senha_view.dart';
-import 'listas_view.dart'; // Importe a tela de Listas
+import 'listas_view.dart';
+// Importe a tela de Listas
 
 class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
