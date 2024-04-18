@@ -205,8 +205,17 @@ class _ListasViewState extends State<ListasView> {
             );
           },
           child: Card(
-            child: Center(
-              child: Text(listas[index]),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    _editarNomeLista(listas[index]);
+                  },
+                ),
+                Text(listas[index]),
+              ],
             ),
           ),
         );

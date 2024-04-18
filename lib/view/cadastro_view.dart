@@ -18,25 +18,25 @@ class _CadastroViewState extends State<CadastroView> {
     final email = _emailController.text;
     final senha = _senhaController.text;
 
-    // Validar se os campos estão preenchidos
-    if (nome.isEmpty || email.isEmpty || senha.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Erro de Cadastro'),
-          content: Text('Preencha todos os campos.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
+    // Verificar se o nome contém apenas letras
+    if (!RegExp(r'^[a-zA-Z]+$').hasMatch(nome)) {
+      _exibirAlerta('Erro de Cadastro', 'O nome deve conter apenas letras.');
       return;
     }
+
+    // Verificar se o email contém '@'
+    if (!email.contains('@')) {
+      _exibirAlerta('Erro de Cadastro', 'O e-mail deve ser válido.');
+      return;
+    }
+
+    // Verificar se a senha tem pelo menos 4 caracteres
+    if (senha.length < 4) {
+      _exibirAlerta('Erro de Cadastro', 'A senha deve conter pelo menos 4 caracteres.');
+      return;
+    }
+
+    // Continuar com o cadastro se todas as verificações passarem
 
     // Salvando os dados de cadastro no SharedPreferences
     final prefs = await SharedPreferences.getInstance();
@@ -45,19 +45,15 @@ class _CadastroViewState extends State<CadastroView> {
     await prefs.setString('senha', senha);
 
     // Exemplo de feedback ao usuário
+    _exibirAlerta('Cadastro realizado com sucesso', 'Nome: $nome\nE-mail: $email\nSenha: ${'*' * senha.length}');
+  }
+
+  void _exibirAlerta(String titulo, String mensagem) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Cadastro realizado com sucesso'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Nome: $nome'),
-            Text('E-mail: $email'),
-            Text('Senha: ${'*' * senha.length}'), // Exibe a senha com caracteres ocultos
-          ],
-        ),
+        title: Text(titulo),
+        content: Text(mensagem),
         actions: [
           TextButton(
             onPressed: () {
@@ -117,3 +113,4 @@ class _CadastroViewState extends State<CadastroView> {
     );
   }
 }
+
