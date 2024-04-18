@@ -15,6 +15,7 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
   List<ItemLista> itens = []; // Lista de itens da lista
   final _listaRepository = ListaRepository(); // Instância do repositório
   late List<ItemLista> itensFiltrados; // Lista de itens filtrados para pesquisa
+  bool listaExcluida = false; // Flag para controlar se a lista foi excluída
 
   @override
   void initState() {
@@ -38,6 +39,17 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
 
   @override
   Widget build(BuildContext context) {
+    if (listaExcluida) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Lista Excluída'),
+        ),
+        body: Center(
+          child: Text('Esta lista foi excluída.'),
+        ),
+      );
+    }
+
     int totalItens = itens.length;
     double valorTotal = itens.fold(0, (total, item) => total + (item.quantidade * item.preco));
 
@@ -60,68 +72,70 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: itensFiltrados.length + 1, // Adiciona uma linha para o total
-        itemBuilder: (context, index) {
-          if (index < itensFiltrados.length) {
-            final item = itensFiltrados[index];
-            return ListTile(
-              title: Text(item.nome),
-              subtitle: Text('Quantidade: ${item.quantidade}, Preço: ${item.preco}'),
-              leading: Checkbox(
-                value: item.comprado,
-                onChanged: (value) {
-                  setState(() {
-                    item.comprado = value!;
-                    _listaRepository.salvarItem(item, widget.nomeLista); // Salva o estado do item
-                  });
-                },
-              ),
-              trailing: IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () {
-                  setState(() {
-                    itens.removeWhere((element) => element.nome == item.nome);
-                    _listaRepository.removerItem(item, widget.nomeLista); // Remove o item do repositório
-                  });
-                },
-              ),
-              onTap: () async {
-                ItemLista? itemEditado = await showDialog<ItemLista>(
-                  context: context,
-                  builder: (context) => _editarItemDialog(item),
-                );
+      body: !listaExcluida
+          ? ListView.builder(
+              itemCount: itensFiltrados.length + 1, // Adiciona uma linha para o total
+              itemBuilder: (context, index) {
+                if (index < itensFiltrados.length) {
+                  final item = itensFiltrados[index];
+                  return ListTile(
+                    title: Text(item.nome),
+                    subtitle: Text('Quantidade: ${item.quantidade}, Preço: ${item.preco}'),
+                    leading: Checkbox(
+                      value: item.comprado,
+                      onChanged: (value) {
+                        setState(() {
+                          item.comprado = value!;
+                          _listaRepository.salvarItem(item, widget.nomeLista); // Salva o estado do item
+                        });
+                      },
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () {
+                        setState(() {
+                          itens.removeWhere((element) => element.nome == item.nome);
+                          _listaRepository.removerItem(item, widget.nomeLista); // Remove o item do repositório
+                        });
+                      },
+                    ),
+                    onTap: () async {
+                      ItemLista? itemEditado = await showDialog<ItemLista>(
+                        context: context,
+                        builder: (context) => _editarItemDialog(item),
+                      );
 
-                if (itemEditado != null) {
-                  setState(() {
-                    int indexOriginal = itens.indexWhere((element) => element.nome == item.nome);
-                    if (indexOriginal != -1) {
-                      itens[indexOriginal] = itemEditado;
-                      _listaRepository.salvarItem(itemEditado, widget.nomeLista); // Atualiza o item no repositório
-                    }
-                  });
+                      if (itemEditado != null) {
+                        setState(() {
+                          int indexOriginal = itens.indexWhere((element) => element.nome == item.nome);
+                          if (indexOriginal != -1) {
+                            itens[indexOriginal] = itemEditado;
+                            _listaRepository.salvarItem(itemEditado, widget.nomeLista); // Atualiza o item no repositório
+                          }
+                        });
+                      }
+                    },
+                  );
+                } else {
+                  // Exibir total de itens e valor total
+                  return Column(
+                    children: [
+                      ListTile(
+                        title: Text('Total: $totalItens itens'),
+                        subtitle: Text('Valor Total: R\$ $valorTotal'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          _excluirLista();
+                        },
+                        child: Text('Excluir Lista'),
+                      ),
+                    ],
+                  );
                 }
               },
-            );
-          } else {
-            // Exibir total de itens e valor total
-            return Column(
-              children: [
-                ListTile(
-                  title: Text('Total: $totalItens itens'),
-                  subtitle: Text('Valor Total: R\$ $valorTotal'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _excluirLista();
-                  },
-                  child: Text('Excluir Lista'),
-                ),
-              ],
-            );
-          }
-        },
-      ),
+            )
+          : SizedBox(), // Se a lista estiver excluída, não exibir nada
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           ItemLista? novoItem = await showDialog<ItemLista>(
@@ -252,7 +266,7 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
   }
 
   // Método para excluir a lista inteira
-  void _excluirLista() {
+  void _excluirLista() async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -266,11 +280,16 @@ class _ListaDetalhesViewState extends State<ListaDetalhesView> {
             child: Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () {
-              // Remover a lista do repositório e voltar para a tela anterior
-              _listaRepository.excluirLista(widget.nomeLista);
-              Navigator.pop(context);
-              Navigator.pop(context); // Voltar duas vezes para a tela anterior
+            onPressed: () async {
+              // Remover a lista do repositório e da lista de listas
+              await _listaRepository.excluirLista(widget.nomeLista);
+              // Remove os itens da lista local
+              setState(() {
+                itens = [];
+                itensFiltrados = [];
+                listaExcluida = true; // Define a flag para indicar que a lista foi excluída
+              });
+              Navigator.pop(context); // Fechar o diálogo
             },
             child: Text('Excluir'),
           ),
